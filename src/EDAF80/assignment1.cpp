@@ -164,6 +164,7 @@ int main()
 	moon.set_orbit({1.5f, glm::radians(-66.0f), glm::two_pi<float>() / 1.3f});
 
 	CelestialBody earth(sphere, &celestial_body_shader, earth_texture);
+	earth.set_scale(glm::vec3(0.3, 0.3, 0.3));
 	earth.set_spin(earth_spin);
 	earth.set_orbit({-2.5f, glm::radians(45.0f), glm::two_pi<float>() / 10.0f});
 	earth.add_child(&moon);
