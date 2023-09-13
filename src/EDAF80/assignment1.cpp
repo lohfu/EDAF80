@@ -1,3 +1,4 @@
+#include <stack>
 #include "CelestialBody.hpp"
 #include "config.hpp"
 #include "parametric_shapes.hpp"
@@ -247,12 +248,32 @@ int main()
 			CelestialBody* body;
 			glm::mat4 parent_transform;
 		};
-		// TODO: Replace this explicit rendering of the Earth and Moon
-		// with a traversal of the scene graph and rendering of all its
-		// nodes.
-		glm::mat4 earth_transform = earth.render(animation_delta_time_us, camera.GetWorldToClipMatrix(), glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f)), show_basis);
-		moon.render(animation_delta_time_us, camera.GetWorldToClipMatrix(), earth_transform, show_basis);
 
+		std::stack<CelestialBodyRef> stack;
+
+		CelestialBodyRef root = {
+			&sun,
+			glm::mat4(1.0f),
+		};
+
+		stack.push(root);
+
+		while (!stack.empty()) {
+			CelestialBodyRef current = stack.top();
+			stack.pop();
+
+			glm::mat4 transform = current.body->render(animation_delta_time_us, camera.GetWorldToClipMatrix(), current.parent_transform, show_basis);
+
+			std::vector<CelestialBody*> children = current.body->get_children();
+
+			for (CelestialBody* child : children) {
+				CelestialBodyRef child_ref = {
+					child,
+					transform,
+				};
+				stack.push(child_ref);
+			}
+		}
 
 		//
 		// Add controls to the scene.
