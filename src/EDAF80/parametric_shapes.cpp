@@ -127,8 +127,44 @@ parametric_shapes::createSphere(float const radius,
                                 unsigned int const longitude_split_count,
                                 unsigned int const latitude_split_count)
 {
+	auto vertices = std::vector<glm::vec3>(longitude_split_count);
 
-	//! \todo Implement this function
+	float const delta_theta = (2 * M_PI) / longitude_split_count;
+
+	for (int i = 0; i < longitude_split_count; i++) {
+		vertices[i] = glm::vec3(radius * std::sin(i * delta_theta), radius * std::cos(i * delta_theta), 0.0f);
+	}
+
+
+
+	auto index_sets = std::vector<glm::uvec3>(longitude_split_count - 2);
+
+	for (int i = 0; i < longitude_split_count - 2; i++) {
+		index_sets[i] = glm::uvec3(0u, 1u + i, 2u + i);
+	}
+
+	bonobo::mesh_data data;
+
+	glGenVertexArrays(1, &data.vao);
+	glBindVertexArray(data.vao);
+	glGenBuffers(1, &data.bo);
+	glBindBuffer(GL_ARRAY_BUFFER, data.bo);
+	glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(vertices.size() * sizeof(glm::vec3)), vertices.data(), GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(static_cast<unsigned int>(bonobo::shader_bindings::vertices));
+	glVertexAttribPointer(static_cast<unsigned int>(bonobo::shader_bindings::vertices), 3, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<GLvoid const*>(0x0));
+
+	glGenBuffers(1, &data.ibo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.ibo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(index_sets.size() * sizeof(glm::uvec3)), index_sets.data(), GL_STATIC_DRAW);
+
+	data.indices_nb = static_cast<GLsizei>(index_sets.size() * 3);
+
+	glBindVertexArray(0u);
+	glBindBuffer(GL_ARRAY_BUFFER, 0u);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0u);
+
+	return data;
 	return bonobo::mesh_data();
 }
 
