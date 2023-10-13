@@ -144,9 +144,9 @@ parametric_shapes::createSphere(float const radius,
 			);
 
 			 auto const tangent = glm::vec3(
-				radius * std::cos(delta_theta * j) * std::sin(delta_phi * i),
+				std::cos(delta_theta * j),
 				0,
-				-radius * std::sin(delta_theta * j) * std::sin(delta_phi * i)
+				-std::sin(delta_theta * j)
 			);
 
 			tangents[i * longitude_split_count + j] = tangent;
