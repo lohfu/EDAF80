@@ -48,7 +48,7 @@ edaf80::Assignment2::run()
 		return;
 
 	// Set up the camera
-	mCamera.mWorld.SetTranslate(glm::vec3(0.0f, 0.0f, 0.5f));
+	mCamera.mWorld.SetTranslate(glm::vec3(0.0f, 1.0f, 9.0f));
 	mCamera.mMouseSensitivity = glm::vec2(0.003f);
 	mCamera.mMovementSpeed = glm::vec3(3.0f); // 3 m/s => 10.8 km/h
 
@@ -123,7 +123,7 @@ edaf80::Assignment2::run()
 
 	// Set whether to show the control points or not; it can always be changed
 	// at runtime through the "Scene Controls" window.
-	bool show_control_points = false;
+	bool show_control_points = true;
 
 	auto circle_rings = Node();
 	circle_rings.set_geometry(shape);
@@ -174,6 +174,13 @@ edaf80::Assignment2::run()
 
 	changeCullMode(cull_mode);
 
+
+	auto node = Node();
+	node.set_geometry(shape);
+	node.set_program(&normal_shader, set_uniforms);
+
+	size_t current_control_point = 0u;
+
 	while (!glfwWindowShouldClose(window)) {
 		auto const nowTime = std::chrono::high_resolution_clock::now();
 		auto const deltaTimeUs = std::chrono::duration_cast<std::chrono::microseconds>(nowTime - lastTime);
@@ -214,18 +221,28 @@ edaf80::Assignment2::run()
 
 
 		if (interpolate) {
-			//! \todo Interpolate the movement of a shape between various
-			//!        control points.
+			if (elapsed_time_s >= 1.0f) {
+				elapsed_time_s -= 1.0f;
+				current_control_point = (current_control_point + 1) % control_point_locations.size();
+			}
+
+			glm::vec3 position;
+
 			if (use_linear) {
-				//! \todo Compute the interpolated position
-				//!       using the linear interpolation.
+				glm::vec3 &p0 = control_point_locations.at(current_control_point);
+				glm::vec3 &p1 = control_point_locations.at((current_control_point + 1) % control_point_locations.size());
+				position = interpolation::evalLERP(p0, p1, elapsed_time_s);
 			}
 			else {
-				//! \todo Compute the interpolated position
-				//!       using the Catmull-Rom interpolation;
-				//!       use the `catmull_rom_tension`
-				//!       variable as your tension argument.
+				glm::vec3 &p0 = control_point_locations.at((current_control_point - 1) % control_point_locations.size());
+				glm::vec3 &p1 = control_point_locations.at(current_control_point);
+				glm::vec3 &p2 = control_point_locations.at((current_control_point + 1) % control_point_locations.size());
+				glm::vec3 &p3 = control_point_locations.at((current_control_point + 2) % control_point_locations.size());
+				position = interpolation::evalCatmullRom(p0, p1, p2, p3, catmull_rom_tension, elapsed_time_s);
 			}
+
+			node.get_transform().SetTranslate(position);
+			node.render(mCamera.GetWorldToClipMatrix());
 		}
 
 		circle_rings.render(mCamera.GetWorldToClipMatrix());
