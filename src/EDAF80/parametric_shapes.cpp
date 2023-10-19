@@ -135,31 +135,44 @@ parametric_shapes::createSphere(float const radius,
 	float const delta_phi = M_PI / latitude_split_count;
 	float const delta_theta = (2.0f * M_PI) / longitude_split_count;
 
+	float phi, theta, cos_phi, sin_phi, cos_theta, sin_theta;
+	int index;
+
+
 	for (int i = 0u; i < latitude_split_count + 1u; i++) {
+		phi = delta_phi * i;
+		cos_phi = std::cos(phi);
+		sin_phi = std::sin(phi);
+
 		for (int j = 0u; j < longitude_split_count; j++) {
-			vertices[i * longitude_split_count + j] = glm::vec3(
-				radius * std::sin(delta_theta * j) * std::sin(delta_phi * i),
-				-radius * std::cos(delta_phi * i),
-				radius * std::cos(delta_theta * j) * std::sin(delta_phi * i)
+			theta = delta_theta * j;
+			cos_theta = std::cos(theta);
+			sin_theta = std::sin(theta);
+			index = i * longitude_split_count + j;
+
+			vertices[index] = glm::vec3(
+				radius * sin_theta * sin_phi,
+				-radius * cos_phi,
+				radius * cos_theta * sin_phi
 			);
 
 			 auto const tangent = glm::vec3(
-				std::cos(delta_theta * j),
+				cos_theta,
 				0,
-				-std::sin(delta_theta * j)
+				-sin_theta
 			);
 
-			tangents[i * longitude_split_count + j] = tangent;
+			tangents[index] = tangent;
 
 			auto const binormal = glm::vec3(
-				radius * std::sin(delta_theta * j) * std::cos(delta_phi * i),
-				radius * std::sin(delta_phi * i),
-				radius * std::cos(delta_theta * j) * std::cos(delta_phi * i)
+				radius * sin_theta * cos_phi,
+				radius * sin_phi,
+				radius * cos_theta * cos_phi
 			);
 
-			binormals[i * longitude_split_count + j] = binormal;
+			binormals[index] = binormal;
 
-			normals[i * longitude_split_count + j] = glm::cross(tangent, binormal);
+			normals[index] = glm::cross(tangent, binormal);
 		}
 	}
 
